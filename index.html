@@ -10,8 +10,10 @@
     <style>
         :root {
             --accent: #ff2d55;
+            --accent-rgb: 255, 45, 85;
             --bg: #0a0808;
             --card-bg: rgba(20, 18, 18, 0.8);
+            --grid-opacity: 0.03;
         }
 
         body { 
@@ -19,6 +21,7 @@
             color: #ffffff; 
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
+            transition: background-color 0.8s ease;
         }
 
         /* Moving Grid Background */
@@ -26,12 +29,13 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background-image: 
-                linear-gradient(rgba(255, 45, 85, 0.03) 1px, transparent 1px),
-                linear-gradient(90px, rgba(255, 45, 85, 0.03) 1px, transparent 1px);
+                linear-gradient(rgba(var(--accent-rgb), var(--grid-opacity)) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(var(--accent-rgb), var(--grid-opacity)) 1px, transparent 1px);
             background-size: 50px 50px;
             z-index: -1;
             mask-image: radial-gradient(circle at center, black, transparent 80%);
             animation: moveGrid 20s linear infinite;
+            transition: background-image 0.8s ease;
         }
 
         @keyframes moveGrid {
@@ -42,14 +46,14 @@
         .bento-card { 
             background-color: var(--card-bg); 
             border-radius: 28px; 
-            padding: 2rem; 
+            padding: 2.5rem; 
             border: 1px solid #2a2424; 
             backdrop-filter: blur(12px);
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.3s ease;
             position: relative;
             overflow: hidden;
-            opacity: 0; /* For reveal animation */
-            transform: translateY(20px);
+            opacity: 0; 
+            transform: translateY(30px);
         }
 
         .bento-card.reveal {
@@ -57,17 +61,25 @@
             transform: translateY(0);
         }
 
+        /* Dein Originaler Mouse-Follow Effekt */
         .bento-card::before {
             content: "";
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255, 45, 85, 0.08), transparent 40%);
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(var(--accent-rgb), 0.15), transparent 40%);
             z-index: -1;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .bento-card:hover::before {
+            opacity: 1;
         }
 
         .bento-card:hover {
             border-color: var(--accent);
-            box-shadow: 0 0 40px rgba(255, 45, 85, 0.05);
+            transform: scale(1.01) translateY(-5px);
+            box-shadow: 0 0 50px rgba(var(--accent-rgb), 0.1);
         }
 
         .status-dot {
@@ -96,7 +108,7 @@
         }
 
         .badge:hover { 
-            background: rgba(255, 45, 85, 0.1);
+            background: rgba(var(--accent-rgb), 0.1);
             border-color: var(--accent);
             color: var(--accent);
         }
@@ -115,12 +127,34 @@
             .extra-card { grid-column: span 4; }
         }
 
-        .lang-btn.active { background: var(--accent); box-shadow: 0 4px 15px rgba(255, 45, 85, 0.3); }
+        .lang-btn.active { background: var(--accent); box-shadow: 0 4px 15px rgba(var(--accent-rgb), 0.3); }
+
+        /* Security Scan Styles */
+        #security-overlay {
+            position: fixed; inset: 0; z-index: 100; background: #0a0808;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: 'Fira Code', monospace; transition: opacity 0.8s ease;
+        }
+
+        .system-log {
+            position: fixed; bottom: 15px; left: 20px;
+            font-family: 'Fira Code', monospace; font-size: 9px;
+            color: var(--accent); opacity: 0.4; z-index: 40; pointer-events: none;
+        }
     </style>
 </head>
 <body class="p-6 md:p-20 max-w-6xl mx-auto">
 
-    <div class="bg-grid"></div>
+    <div id="security-overlay">
+        <div class="mb-4 text-[#ff2d55] text-sm tracking-[0.3em] animate-pulse font-bold" id="scan-status-title">[ INITIALIZING SYSTEM SCAN ]</div>
+        <div class="w-64 h-1 bg-white/5 rounded-full overflow-hidden relative">
+            <div id="scan-bar" class="absolute top-0 left-0 h-full bg-[#ff2d55] w-0 shadow-[0_0_15px_#ff2d55]"></div>
+        </div>
+        <div id="scan-text" class="mt-4 text-[10px] text-gray-500 uppercase tracking-widest">Initialising...</div>
+    </div>
+
+    <div class="bg-grid" id="main-grid"></div>
+    <div class="system-log" id="log-text">LOG: STABLE</div>
 
     <div class="fixed top-8 right-8 flex gap-2 z-50 bg-black/40 p-1.5 rounded-2xl border border-white/10 backdrop-blur-xl">
         <button onclick="setLanguage('de')" id="btn-de" class="lang-btn active px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-tighter transition-all">DE</button>
@@ -128,7 +162,7 @@
     </div>
 
     <div class="bento-grid">
-        <header class="bento-card header-card flex flex-col md:flex-row items-center gap-12" style="transition-delay: 0.1s">
+        <header class="bento-card header-card flex flex-col md:flex-row items-center gap-12">
             <div class="relative group">
                 <div class="w-44 h-44 rounded-[2rem] overflow-hidden border-2 border-white/5 rotate-3 group-hover:rotate-0 transition-all duration-500">
                     <img src="citty.jpeg" alt="Skorbjen" class="w-full h-full object-cover">
@@ -139,36 +173,54 @@
             </div>
 
             <div class="flex-1 text-center md:text-left">
-                <h1 class="text-6xl font-black mb-2 tracking-tighter">SKORBJEN</h1>
+                <div class="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+                    <h1 class="text-6xl font-black tracking-tighter">SKORBJEN</h1>
+                    <div class="flex justify-center md:justify-start gap-2 bg-black/30 p-2 rounded-xl border border-white/5 w-fit">
+                        <div class="group/badge relative cursor-help">
+                            <i class="fas fa-crown text-yellow-500 text-sm drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]"></i>
+                            <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-[9px] px-2 py-1 rounded border border-white/10 opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap">Founder</span>
+                        </div>
+                        <div class="group/badge relative cursor-help">
+                            <i class="fas fa-code text-[#ff2d55] text-sm badge-icon"></i>
+                            <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-[9px] px-2 py-1 rounded border border-white/10 opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap">Lead Dev</span>
+                        </div>
+                        <div class="group/badge relative cursor-help">
+                            <i class="fas fa-bolt text-blue-400 text-sm badge-icon-alt"></i>
+                            <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-[9px] px-2 py-1 rounded border border-white/10 opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap">Optimizer</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-medium text-gray-400 uppercase tracking-[0.2em] mb-8">
-                    <span class="flex items-center gap-2"><i class="fas fa-code text-[#ff2d55]"></i> Dev</span>
-                    <span class="flex items-center gap-2"><i class="fas fa-crown text-[#ff2d55]"></i> Surreal Founder</span>
+                    <span class="flex items-center gap-2"><i class="fas fa-code badge-icon"></i> Dev</span>
+                    <span class="flex items-center gap-2"><i class="fas fa-crown badge-icon"></i> Surreal Founder</span>
                 </div>
                 
                 <div class="flex flex-wrap justify-center md:justify-start gap-3">
-                    <a href="https://discord.gg/kXYXRkRr6j" class="px-6 py-3 bg-[#ff2d55] rounded-2xl font-bold text-sm hover:scale-105 transition-all active:scale-95 flex items-center gap-2">
+                    <a href="https://discord.gg/kXYXRkRr6j" target="_blank" class="connect-btn px-6 py-3 bg-[#ff2d55] rounded-2xl font-bold text-sm hover:scale-105 transition-all active:scale-95 flex items-center gap-2">
                         <i class="fab fa-discord"></i> Connect
                     </a>
-                    <a href="https://github.com/Skorbjen/About-Me" class="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl font-bold text-sm hover:bg-white/10 transition-all flex items-center gap-2">
+                    <a href="https://github.com/Skorbjen/About-Me" target="_blank" class="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl font-bold text-sm hover:bg-white/10 transition-all flex items-center gap-2">
                         <i class="fab fa-github"></i> Projects
-                    <a href="https://github.com/Skorbjen/About-Me" class="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl font-bold text-sm hover:bg-white/10 transition-all flex items-center gap-2">
+                    </a>
+                    <a href="#" class="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl font-bold text-sm hover:bg-white/10 transition-all flex items-center gap-2">
                         <i class="fab fa-github-alt"></i> VRChat
                     </a>
                 </div>
             </div>
         </header>
 
-        <section class="bento-card bio-card" style="transition-delay: 0.2s">
+        <section class="bento-card bio-card">
             <h3 class="text-[10px] uppercase tracking-[0.4em] text-gray-500 mb-6 font-bold">Biography</h3>
             <div class="lang lang-de text-gray-300 text-lg leading-relaxed">
-                Ich bin ein 14-jähriger Entwickler aus Deutschland, spezialisiert auf <span class="text-white font-semibold">System-Optimierung</span> und <span class="text-[#ff2d55] font-semibold">VRChat-Client´s</span>. Gründer und Kopf hinter dem Projekt Surreal.
+                Ich bin ein 14-jähriger Entwickler aus Deutschland, spezialisiert auf <span class="text-white font-semibold">System-Optimierung</span> und <span class="text-[#ff2d55] font-semibold accent-text">VRChat-Clients</span>. Gründer und Kopf hinter dem Projekt Surreal.
             </div>
             <div class="lang lang-en hidden text-gray-300 text-lg leading-relaxed">
-                I'm a 14-year-old developer from Germany, specialized in <span class="text-white font-semibold">system optimization</span> and <span class="text-[#ff2d55] font-semibold">VRChat Client</span>. Founder and lead of Project Surreal.
+                I'm a 14-year-old developer from Germany, specialized in <span class="text-white font-semibold">system optimization</span> and <span class="text-[#ff2d55] font-semibold accent-text">VRChat Clients</span>. Founder and lead of Project Surreal.
             </div>
         </section>
 
-        <section class="bento-card skills-card" style="transition-delay: 0.3s">
+        <section class="bento-card skills-card">
             <h3 class="text-[10px] uppercase tracking-[0.4em] text-gray-500 mb-6 font-bold">Tech Stack</h3>
             <div class="flex flex-wrap gap-2">
                 <span class="badge">C++</span>
@@ -180,58 +232,116 @@
             </div>
         </section>
 
-        <section class="bento-card extra-card bg-gradient-to-br from-[#1a1616] to-[#0a0808]" style="transition-delay: 0.4s">
+        <section class="bento-card extra-card bg-gradient-to-br from-[#1a1616] to-[#0a0808]">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
                     <h2 class="text-2xl font-bold mb-2 italic">PROJECT SURREAL</h2>
                     <p class="text-gray-400 text-sm lang lang-de">Das nächste Level der VRChat Modding-Szene. Tritt unserer Community bei.</p>
                     <p class="text-gray-400 text-sm lang lang-en hidden">The next level of the VRChat modding scene. Join our community.</p>
                 </div>
-				<a href="https://discord.gg/kXYXRkRr6j" target="_blank" class="whitespace-nowrap bg-white text-black px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#ff2d55] hover:text-white transition-all inline-block">
-					Explore Surreal
-				</a>
+                <a href="https://discord.gg/kXYXRkRr6j" target="_blank" class="explore-btn whitespace-nowrap bg-white text-black px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#ff2d55] hover:text-white transition-all">
+                    Explore Surreal
+                </a>
             </div>
         </section>
     </div>
 
-    <footer class="mt-20 text-center">
+    <footer class="mt-20 text-center pb-10">
         <p class="text-[10px] text-gray-600 tracking-[0.5em] uppercase">isrt &bull; Establishing Excellence &bull; 2026</p>
     </footer>
 
     <script>
-        // Language Switcher
-        function setLanguage(lang) {
-            document.querySelectorAll('.lang').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.lang-' + lang).forEach(el => el.classList.remove('hidden'));
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.remove('active');
-                btn.classList.add('text-gray-500');
-            });
-            const activeBtn = document.getElementById('btn-' + lang);
-            activeBtn.classList.add('active');
-            activeBtn.classList.remove('text-gray-500');
-        }
+        // 1. Scan-Logik
+        window.addEventListener('DOMContentLoaded', () => {
+            const bar = document.getElementById('scan-bar');
+            const overlay = document.getElementById('security-overlay');
+            const text = document.getElementById('scan-text');
+            const stages = ["Bypassing...", "Hooking...", "Optimizing...", "Ready."];
+            let progress = 0;
+            let stageIdx = 0;
 
-        // Reveal Animation
-        document.addEventListener('DOMContentLoaded', () => {
-            const cards = document.querySelectorAll('.bento-card');
-            cards.forEach((card, index) => {
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        overlay.style.opacity = "0";
+                        setTimeout(() => { overlay.style.display = "none"; reveal(); }, 800);
+                    }, 400);
+                }
+                bar.style.width = progress + "%";
+                if (progress > (stageIdx + 1) * 25 && stageIdx < stages.length) {
+                    text.innerText = stages[stageIdx];
+                    stageIdx++;
+                }
+            }, 120);
+        });
+
+        // 2. Reveal Animation
+        function reveal() {
+            document.querySelectorAll('.bento-card').forEach((card, index) => {
                 setTimeout(() => {
                     card.classList.add('reveal');
                 }, index * 100);
             });
-        });
+        }
 
-        // Mouse Follow Effect for Cards
+        // 3. Sprachumschalter
+        function setLanguage(lang) {
+            document.querySelectorAll('.lang').forEach(el => el.classList.toggle('hidden', !el.classList.contains('lang-'+lang)));
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.id === 'btn-'+lang));
+        }
+
+        // 4. Mouse Follow für Karten
         document.querySelectorAll('.bento-card').forEach(card => {
             card.onmousemove = e => {
                 const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                card.style.setProperty("--mouse-x", `${x}px`);
-                card.style.setProperty("--mouse-y", `${y}px`);
+                card.style.setProperty("--mouse-x", `${e.clientX - rect.left}px`);
+                card.style.setProperty("--mouse-y", `${e.clientY - rect.top}px`);
             };
         });
+
+        // 5. Easter Egg (surreal -> Lila)
+        let buffer = "";
+        document.addEventListener('keydown', e => {
+            buffer += e.key.toLowerCase();
+            if (buffer.includes("surreal")) {
+                buffer = "";
+                activateSurrealMode();
+            }
+            if (buffer.length > 10) buffer = buffer.substring(1);
+        });
+
+        function activateSurrealMode() {
+            const purple = "#a855f7"; // Modernes Lila
+            const purpleRGB = "168, 85, 247";
+            
+            // CSS Variablen global ändern
+            document.documentElement.style.setProperty('--accent', purple);
+            document.documentElement.style.setProperty('--accent-rgb', purpleRGB);
+            
+            // UI Elemente anpassen
+            document.querySelectorAll('.accent-text, .badge-icon, .badge-icon-alt').forEach(el => el.style.color = purple);
+            document.querySelectorAll('.connect-btn').forEach(el => el.style.backgroundColor = purple);
+            document.getElementById('log-text').style.color = purple;
+            document.getElementById('scan-bar').style.backgroundColor = purple;
+            document.getElementById('scan-status-title').style.color = purple;
+            
+            // Hintergrund ändern
+            document.body.style.backgroundColor = "#0f0714";
+            
+            console.log("SURREAL PURPLE MODE ACTIVATED");
+        }
+
+        // 6. System Log Ticker
+        const log = document.getElementById('log-text');
+        const logMsgs = ["CORE: STABLE", "MEM: OPTIMIZED", "NET: BYPASS ACTIVE", "GUI: RENDERED"];
+        setInterval(() => {
+            log.innerText = "LOG: " + logMsgs[Math.floor(Math.random()*logMsgs.length)];
+            log.style.opacity = "0.8";
+            setTimeout(() => log.style.opacity = "0.4", 2000);
+        }, 4000);
     </script>
 </body>
 </html>

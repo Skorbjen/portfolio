@@ -14,6 +14,7 @@
             --bg: #0a0808;
             --card-bg: rgba(20, 18, 18, 0.5);
             --grid-opacity: 0.15; 
+            --glitch-offset: 2px;
         }
 
         body { 
@@ -22,6 +23,72 @@
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             transition: background-color 0.8s ease;
+        }
+
+        /* --- RGB CYBER GLITCH EFFEKT --- */
+        .glitch-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .name-glitch {
+            position: relative;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #fff;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.3);
+        }
+
+        /* Die Glitch-Ebenen */
+        .name-glitch::before, .name-glitch::after {
+            content: "SKORBJEN";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+            transition: color 0.5s ease;
+        }
+
+        .name-glitch::before {
+            color: #0ff; /* Cyan für den RGB-Split */
+            z-index: -1;
+            animation: glitch-anim-1 3s infinite linear alternate-reverse;
+        }
+
+        .name-glitch::after {
+            color: var(--accent);
+            z-index: -2;
+            animation: glitch-anim-2 2s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { transform: translate(0); clip-path: inset(0 0 0 0); }
+            5% { transform: translate(calc(var(--glitch-offset) * -1), var(--glitch-offset)); clip-path: inset(10% 0 85% 0); }
+            10% { transform: translate(var(--glitch-offset), calc(var(--glitch-offset) * -1)); clip-path: inset(80% 0 5% 0); }
+            15% { transform: translate(0); clip-path: inset(0 0 0 0); }
+            100% { transform: translate(0); clip-path: inset(0 0 0 0); }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% { transform: translate(0); clip-path: inset(0 0 0 0); }
+            5% { transform: translate(var(--glitch-offset), var(--glitch-offset)); clip-path: inset(40% 0 40% 0); }
+            10% { transform: translate(calc(var(--glitch-offset) * -1), calc(var(--glitch-offset) * -1)); clip-path: inset(10% 0 70% 0); }
+            15% { transform: translate(0); clip-path: inset(0 0 0 0); }
+            100% { transform: translate(0); clip-path: inset(0 0 0 0); }
+        }
+
+        /* --- ICON PULSE EFFEKT --- */
+        .badge-icon-pulse {
+            animation: iconPulse 2s infinite ease-in-out;
+            filter: drop-shadow(0 0 5px currentColor);
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 8px currentColor); }
         }
 
         /* --- BACKGROUND ELEMENTS --- */
@@ -150,16 +217,19 @@
 
             <div class="flex-1">
                 <div class="flex flex-col md:flex-row md:items-center gap-4 mb-2">
-                    <h1 class="text-4xl md:text-6xl font-black tracking-tighter">SKORBJEN</h1>
-                    <div class="flex justify-center md:justify-start gap-2 bg-black/30 p-2 rounded-xl border border-white/5 w-fit mx-auto md:mx-0">
+                    <div class="glitch-wrapper">
+                        <h1 class="text-4xl md:text-6xl name-glitch">SKORBJEN</h1>
+                    </div>
+                    
+                    <div class="flex justify-center md:justify-start gap-4 bg-black/30 p-2 px-4 rounded-xl border border-white/5 w-fit mx-auto md:mx-0">
                         <div class="group/badge relative cursor-help">
-                            <i class="fas fa-crown text-yellow-500 text-sm"></i>
+                            <i class="fas fa-crown text-yellow-500 text-sm badge-icon-pulse"></i>
                         </div>
                         <div class="group/badge relative cursor-help">
-                            <i class="fas fa-code text-[#ff2d55] text-sm badge-icon"></i>
+                            <i class="fas fa-code text-[#ff2d55] text-sm badge-icon badge-icon-pulse"></i>
                         </div>
                         <div class="group/badge relative cursor-help">
-                            <i class="fas fa-bolt text-blue-400 text-sm badge-icon-alt"></i>
+                            <i class="fas fa-bolt text-blue-400 text-sm badge-icon-alt badge-icon-pulse"></i>
                         </div>
                     </div>
                 </div>
@@ -286,7 +356,7 @@
             document.querySelectorAll('.accent-text, .badge-icon, .badge-icon-alt').forEach(el => el.style.color = purple);
             document.querySelectorAll('.connect-btn, .lang-btn.active').forEach(el => el.style.backgroundColor = purple);
             document.getElementById('orb-1').style.background = 'rgba(168, 85, 247, 0.12)';
-            document.getElementById('orb-2').style.background = 'rgba(168, 85, 247, 0.08)';
+            document.getElementById('orb-2').style.background = 'rgba(168a, 85, 247, 0.08)';
             document.getElementById('log-text').style.color = purple;
             document.getElementById('scan-bar').style.backgroundColor = purple;
             document.getElementById('scan-title').style.color = purple;

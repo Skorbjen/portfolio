@@ -40,7 +40,6 @@
             text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.3);
         }
 
-        /* Die Glitch-Ebenen */
         .name-glitch::before, .name-glitch::after {
             content: "SKORBJEN";
             position: absolute;
@@ -53,7 +52,7 @@
         }
 
         .name-glitch::before {
-            color: #0ff; /* Cyan für den RGB-Split */
+            color: #0ff; 
             z-index: -1;
             animation: glitch-anim-1 3s infinite linear alternate-reverse;
         }
@@ -166,8 +165,18 @@
         .badge { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 14px; padding: 10px 18px; font-family: 'Fira Code', monospace; font-size: 0.8rem; transition: 0.3s; }
         .badge:hover { background: rgba(var(--accent-rgb), 0.1); border-color: var(--accent); color: var(--accent); }
 
-        .lang-btn { color: #6b7280; transition: all 0.3s ease; cursor: pointer; }
-        .lang-btn.active { color: #ffffff; background: var(--accent); box-shadow: 0 4px 15px rgba(var(--accent-rgb), 0.3); }
+        /* --- FIXED LANGUAGE BUTTONS --- */
+        .lang-btn { 
+            color: #6b7280; 
+            transition: all 0.3s ease; 
+            cursor: pointer; 
+            background: transparent;
+        }
+        .lang-btn.active { 
+            color: #ffffff; 
+            background: var(--accent) !important; 
+            box-shadow: 0 4px 15px rgba(var(--accent-rgb), 0.3); 
+        }
 
         .bento-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
         @media (min-width: 768px) {
@@ -273,7 +282,7 @@
         <section class="bento-card extra-card">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
                 <div>
-                    <h2 class="text-xl md:text-2xl font-bold mb-2 italic">PROJECT SURREAL</h2>
+                    <h2 class="text-xl md:text-2xl font-bold mb-2 italic text-accent">PROJECT SURREAL</h2>
                     <p class="text-gray-400 text-sm lang lang-de">Das nächste Level der VRChat Modding-Szene. Tritt unserer Community bei.</p>
                     <p class="text-gray-400 text-sm lang lang-en hidden">The next level of the VRChat modding scene. Join our community.</p>
                 </div>
@@ -335,7 +344,6 @@
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 const isActive = btn.id === 'btn-'+lang;
                 btn.classList.toggle('active', isActive);
-                btn.classList.toggle('text-gray-500', !isActive);
             });
         }
 
@@ -350,13 +358,20 @@
         });
 
         function activateSurrealMode() {
-            const purple = "#a855f7"; const purpleRGB = "168, 85, 247";
+            const purple = "#a855f7"; 
+            const purpleRGB = "168, 85, 247";
+            
+            // CSS Variablen ändern
             document.documentElement.style.setProperty('--accent', purple);
             document.documentElement.style.setProperty('--accent-rgb', purpleRGB);
-            document.querySelectorAll('.accent-text, .badge-icon, .badge-icon-alt').forEach(el => el.style.color = purple);
-            document.querySelectorAll('.connect-btn, .lang-btn.active').forEach(el => el.style.backgroundColor = purple);
-            document.getElementById('orb-1').style.background = 'rgba(168, 85, 247, 0.12)';
-            document.getElementById('orb-2').style.background = 'rgba(168a, 85, 247, 0.08)';
+            
+            // UI Anpassungen
+            document.querySelectorAll('.accent-text, .badge-icon, .badge-icon-alt, .text-accent').forEach(el => el.style.color = purple);
+            document.querySelectorAll('.connect-btn').forEach(el => el.style.backgroundColor = purple);
+            
+            // Hintergrund
+            document.getElementById('orb-1').style.background = `rgba(${purpleRGB}, 0.12)`;
+            document.getElementById('orb-2').style.background = `rgba(${purpleRGB}, 0.08)`;
             document.getElementById('log-text').style.color = purple;
             document.getElementById('scan-bar').style.backgroundColor = purple;
             document.getElementById('scan-title').style.color = purple;
